@@ -1,4 +1,4 @@
-package com.gitlab.muhammadkholidb.desktopcreator.component;
+package com.gitlab.muhammadkholidb.desktopcreator.example;
 
 import java.awt.Container;
 import java.awt.GridBagConstraints;

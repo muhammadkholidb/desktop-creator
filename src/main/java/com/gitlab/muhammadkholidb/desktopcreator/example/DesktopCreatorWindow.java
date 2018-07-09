@@ -1,4 +1,4 @@
-package com.gitlab.muhammadkholidb.desktopcreator.component;
+package com.gitlab.muhammadkholidb.desktopcreator.example;
 
 import java.io.File;
 import org.apache.pivot.collections.ArrayList;
