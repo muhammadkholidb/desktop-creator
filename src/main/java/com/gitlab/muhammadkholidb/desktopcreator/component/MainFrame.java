@@ -1,20 +1,124 @@
-package com.gitlab.muhammadkholidb.desktopcreator.example;
+package com.gitlab.muhammadkholidb.desktopcreator.component;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author muhammad
  */
-public class DesktopCreatorFrame extends JFrame {
+public class MainFrame extends JFrame {
 
-    /**
-     * Creates new form DesktopCreatorFrame
-     */
-    public DesktopCreatorFrame() {
+    private final static Logger LOG = Logger.getLogger(MainFrame.class.getName());
+    
+    private final JFileChooser fileChooser = new JFileChooser();
+    private final ActionListener actionListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Object source = e.getSource();
+            if (source == btnChooseIcon) {
+                onClickBtnChooseIcon();
+            } else if (source == btnChooseExecutable) {
+                onClickBtnChooseExecutable();
+            } else if (source == btnCreate) {
+                onClickBtnCreate();
+            } else if (source == btnExit) {
+                LOG.info("Exiting ...");
+                System.exit(0);
+            }
+        }
+    };
+    
+    public MainFrame() {
         initComponents();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        btnChooseExecutable.addActionListener(actionListener);
+        btnChooseIcon.addActionListener(actionListener);
+        btnExit.addActionListener(actionListener);
+        btnCreate.addActionListener(actionListener);
     }
 
+    private void onClickBtnChooseIcon() {
+        int val = fileChooser.showOpenDialog(this);
+        if (val == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            tfIconLocation.setText(file.getAbsolutePath());
+        }
+    }
+    
+    private void onClickBtnChooseExecutable() {
+        int val = fileChooser.showOpenDialog(this);
+        if (val == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            tfExecutableLocation.setText(file.getAbsolutePath());
+        }
+    }
+    
+    private void onClickBtnCreate() {
+        String valName = tfName.getText();
+        String valDescription = tfDescription.getText();
+        String valExecutable = tfExecutableLocation.getText();
+        String valIcon = tfIconLocation.getText();
+        if (validateInputs(valName, valExecutable)) {
+            try {
+                String desktopFileName = valName.replaceAll("[^a-zA-Z0-9]", "-").toLowerCase();
+                String desktopFileLocation = "/usr/share/applications/" + desktopFileName + ".desktop";
+                File defaultIconFile = new File("/usr/share/icons/desktop-creator/default-icon.png");
+                if (valIcon.isEmpty()) {
+                    if (!defaultIconFile.exists()) {
+                        InputStream isDefaultIcon = MainFrame.class.getResourceAsStream("/default-icon.png");
+                        String defaultIconLocation = "/usr/share/icons/desktop-creator/default-icon.png";
+                        FileUtils.copyInputStreamToFile(isDefaultIcon, new File(defaultIconLocation));
+                        LOG.log(Level.INFO, "Default icon copied to {0}", defaultIconLocation);
+                    }
+                    LOG.info("Using default icon");
+                    valIcon = defaultIconFile.getAbsolutePath();
+                }
+                InputStream isContent = MainFrame.class.getResourceAsStream("/desktop-content.txt");
+                String desktopFileContent = IOUtils.toString(isContent);
+                String desktopFileContentFormatted = String.format(desktopFileContent, valName, valDescription, valExecutable, valIcon);
+                FileUtils.writeStringToFile(new File(desktopFileLocation), desktopFileContentFormatted);
+                LOG.log(Level.INFO, "File {0} created successfully", desktopFileLocation);
+                JOptionPane.showMessageDialog(this, "Desktop file created successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                clearInputs();
+            } catch (IOException e) {
+                LOG.log(Level.SEVERE, e.toString(), e);
+                JOptionPane.showMessageDialog(this, "Failed to create desktop file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private boolean validateInputs(String name, String executable) {
+        if (name.isEmpty()) {
+            LOG.severe("Name is empty");
+            JOptionPane.showMessageDialog(this, "Please fill in application name.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } 
+        if (executable.isEmpty()) {
+            LOG.severe("Executable location is empty");
+            JOptionPane.showMessageDialog(this, "Please fill in executable file location.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+    
+    private void clearInputs() {
+        tfName.setText("");
+        tfDescription.setText("");
+        tfExecutableLocation.setText("");
+        tfIconLocation.setText("");
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -29,7 +133,7 @@ public class DesktopCreatorFrame extends JFrame {
         jLabel2 = new javax.swing.JLabel();
         tfIconLocation = new javax.swing.JTextField();
         btnChooseExecutable = new javax.swing.JButton();
-        btnIconLocation = new javax.swing.JButton();
+        btnChooseIcon = new javax.swing.JButton();
         btnExit = new javax.swing.JButton();
         btnCreate = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
@@ -47,7 +151,7 @@ public class DesktopCreatorFrame extends JFrame {
 
         btnChooseExecutable.setText("Choose ...");
 
-        btnIconLocation.setText("Choose ...");
+        btnChooseIcon.setText("Choose ...");
 
         btnExit.setText("Exit");
         btnExit.setToolTipText("");
@@ -87,29 +191,28 @@ public class DesktopCreatorFrame extends JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnChooseExecutable)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(btnIconLocation)
+                        .addComponent(btnChooseIcon)
                         .addContainerGap())))
             .addGroup(layout.createSequentialGroup()
-                .addGap(14, 14, 14)
-                .addComponent(jLabel5)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSeparator1)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 422, Short.MAX_VALUE)
                         .addComponent(btnCreate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnExit)))
+                        .addComponent(btnExit))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(12, 12, 12)
+                .addContainerGap()
                 .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tfName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
@@ -126,7 +229,7 @@ public class DesktopCreatorFrame extends JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel2)
                     .addComponent(tfIconLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnIconLocation))
+                    .addComponent(btnChooseIcon))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -139,46 +242,11 @@ public class DesktopCreatorFrame extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(DesktopCreatorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(DesktopCreatorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(DesktopCreatorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(DesktopCreatorFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new DesktopCreatorFrame().setVisible(true);
-            }
-        });
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnChooseExecutable;
+    private javax.swing.JButton btnChooseIcon;
     private javax.swing.JButton btnCreate;
     private javax.swing.JButton btnExit;
-    private javax.swing.JButton btnIconLocation;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -190,4 +258,5 @@ public class DesktopCreatorFrame extends JFrame {
     private javax.swing.JTextField tfIconLocation;
     private javax.swing.JTextField tfName;
     // End of variables declaration//GEN-END:variables
+
 }

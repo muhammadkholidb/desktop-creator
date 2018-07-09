@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=%s
+Comment=%s
+Exec=%s
+Icon=%s
+Categories=Application
+Version=1.0
+Type=Application
+Terminal=0
