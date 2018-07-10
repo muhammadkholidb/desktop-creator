@@ -80,11 +80,10 @@ public class MainFrame extends JFrame {
             boolean useDefaultIcon = false;
             if (valIcon.isEmpty()) {
                 int valConfirmation = JOptionPane.showConfirmDialog(this, "Icon location has not been set, do you want to use default icon instead?", "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (valConfirmation == JOptionPane.YES_OPTION) {
-                    useDefaultIcon = true;
-                } else {
+                if (valConfirmation != JOptionPane.YES_OPTION) {
                     return;
-                }
+                } 
+                useDefaultIcon = true;
             }
             try {
                 String desktopFileName = valName.replaceAll("[^a-zA-Z0-9]", "-").toLowerCase();
