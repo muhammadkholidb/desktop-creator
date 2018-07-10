@@ -40,12 +40,23 @@ public class MainFrame extends JFrame {
     };
     
     public MainFrame() {
+        if (!isUnix()) {
+            LOG.severe("OS is not Linux");
+            JOptionPane.showMessageDialog(null, "This application is intended for use on Linux OS only.", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+            return;
+        }
         initComponents();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         btnChooseExecutable.addActionListener(actionListener);
         btnChooseIcon.addActionListener(actionListener);
         btnExit.addActionListener(actionListener);
         btnCreate.addActionListener(actionListener);
+    }
+
+    public static boolean isUnix() {
+        String os = System.getProperty("os.name");
+        return (os.contains("nix") || os.contains("nux") || os.indexOf("aix") > 0);
     }
 
     private void onClickBtnChooseIcon() {
