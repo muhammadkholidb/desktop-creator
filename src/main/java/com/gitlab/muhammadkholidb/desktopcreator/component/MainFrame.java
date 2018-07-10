@@ -1,5 +1,6 @@
 package com.gitlab.muhammadkholidb.desktopcreator.component;
 
+import com.gitlab.muhammadkholidb.desktopcreator.utility.OSInfo;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -40,7 +41,7 @@ public class MainFrame extends JFrame {
     };
     
     public MainFrame() {
-        if (!isUnix()) {
+        if (!OSInfo.isUnix()) {
             LOG.severe("OS is not Linux");
             JOptionPane.showMessageDialog(null, "This application is intended for use on Linux OS only.", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(0);
@@ -52,11 +53,6 @@ public class MainFrame extends JFrame {
         btnChooseIcon.addActionListener(actionListener);
         btnExit.addActionListener(actionListener);
         btnCreate.addActionListener(actionListener);
-    }
-
-    public static boolean isUnix() {
-        String os = System.getProperty("os.name");
-        return (os.contains("nix") || os.contains("nux") || os.indexOf("aix") > 0);
     }
 
     private void onClickBtnChooseIcon() {
@@ -81,11 +77,20 @@ public class MainFrame extends JFrame {
         String valExecutable = tfExecutableLocation.getText();
         String valIcon = tfIconLocation.getText();
         if (validateInputs(valName, valExecutable)) {
+            boolean useDefaultIcon = false;
+            if (valIcon.isEmpty()) {
+                int valConfirmation = JOptionPane.showConfirmDialog(this, "Icon location has not been set, do you want to use default icon instead?", "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (valConfirmation == JOptionPane.YES_OPTION) {
+                    useDefaultIcon = true;
+                } else {
+                    return;
+                }
+            }
             try {
                 String desktopFileName = valName.replaceAll("[^a-zA-Z0-9]", "-").toLowerCase();
                 String desktopFileLocation = "/usr/share/applications/" + desktopFileName + ".desktop";
-                File defaultIconFile = new File("/usr/share/icons/desktop-creator/default-icon.png");
-                if (valIcon.isEmpty()) {
+                if (useDefaultIcon) {
+                    File defaultIconFile = new File("/usr/share/icons/desktop-creator/default-icon.png");
                     if (!defaultIconFile.exists()) {
                         InputStream isDefaultIcon = MainFrame.class.getResourceAsStream("/default-icon.png");
                         String defaultIconLocation = "/usr/share/icons/desktop-creator/default-icon.png";
@@ -112,12 +117,12 @@ public class MainFrame extends JFrame {
     private boolean validateInputs(String name, String executable) {
         if (name.isEmpty()) {
             LOG.severe("Name is empty");
-            JOptionPane.showMessageDialog(this, "Please fill in application name.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Application name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         } 
         if (executable.isEmpty()) {
             LOG.severe("Executable location is empty");
-            JOptionPane.showMessageDialog(this, "Please fill in executable file location.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Executable file location cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         return true;
